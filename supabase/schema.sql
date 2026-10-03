@@ -221,7 +221,10 @@ create policy profiles_update on public.profiles for update to authenticated
 
 -- spaces
 drop policy if exists spaces_read on public.spaces;
-create policy spaces_read on public.spaces for select to authenticated using (public.is_member(id));
+-- the creator can always read it: INSERT ... RETURNING checks this policy
+-- before the membership row added by the trigger is visible
+create policy spaces_read on public.spaces for select to authenticated
+  using (public.is_member(id) or created_by = auth.uid());
 drop policy if exists spaces_insert on public.spaces;
 create policy spaces_insert on public.spaces for insert to authenticated with check (created_by = auth.uid());
 drop policy if exists spaces_update on public.spaces;
