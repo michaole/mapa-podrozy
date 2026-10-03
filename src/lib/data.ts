@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Member, NewPlace, Photo, Place, Space, Trip } from "./types";
+import type { ExtraCountry, Member, NewPlace, Photo, Place, Space, Trip, Who } from "./types";
 
 function check<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message);
@@ -54,12 +54,12 @@ export async function loadSpace(spaceId: string) {
   const [places, trips, extra] = await Promise.all([
     supabase.from("places").select("*").eq("space_id", spaceId).order("created_at", { ascending: false }),
     supabase.from("trips").select("*").eq("space_id", spaceId).order("start_date", { ascending: false, nullsFirst: false }),
-    supabase.from("extra_countries").select("country_code").eq("space_id", spaceId),
+    supabase.from("extra_countries").select("country_code, who").eq("space_id", spaceId),
   ]);
   return {
     places: check(places) as Place[],
     trips: check(trips) as Trip[],
-    extraCountries: check(extra).map((r) => (r.country_code as string).toUpperCase()),
+    extraCountries: check(extra).map((r): ExtraCountry => ({ code: (r.country_code as string).toUpperCase(), who: r.who as Who })),
   };
 }
 
@@ -86,9 +86,14 @@ export async function deleteTrip(id: string): Promise<void> {
   check(await supabase.from("trips").delete().eq("id", id));
 }
 
-export async function setExtraCountry(spaceId: string, code: string, on: boolean): Promise<void> {
-  if (on) check(await supabase.from("extra_countries").upsert({ space_id: spaceId, country_code: code }));
-  else check(await supabase.from("extra_countries").delete().eq("space_id", spaceId).eq("country_code", code));
+export async function setExtraCountry(spaceId: string, code: string, who: Who, on: boolean): Promise<void> {
+  if (on) check(await supabase.from("extra_countries").upsert({ space_id: spaceId, country_code: code, who }));
+  else check(await supabase.from("extra_countries").delete()
+    .eq("space_id", spaceId).eq("country_code", code).eq("who", who));
+}
+
+export async function setMyName(userId: string, display_name: string): Promise<void> {
+  check(await supabase.from("profiles").update({ display_name }).eq("id", userId));
 }
 
 // ── photos ───────────────────────────────────────────────────────────────────

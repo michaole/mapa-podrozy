@@ -213,6 +213,15 @@ textarea { resize: vertical; }
 .segmented__opt:has(input:focus-visible) { outline: 2px solid var(--visited); }
 .segmented__opt--visited:has(input:checked) { background: var(--visited); color: #fff; box-shadow: 0 2px 8px -3px rgba(31, 107, 92, .6); }
 .segmented__opt--wishlist:has(input:checked) { background: var(--wishlist); color: #fff; box-shadow: 0 2px 8px -3px rgba(200, 103, 58, .6); }
+.segmented__opt--neutral:has(input:checked) { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(60, 48, 30, .18); }
+.who { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.who__legend { font-size: .78rem; font-weight: 550; color: var(--ink-2); padding: 0; margin-bottom: 5px; }
+.who__opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.who__opt { position: relative; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--rule-strong); font-size: .9rem; font-weight: 550; color: var(--ink-2); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease); }
+.who__opt input { position: absolute; opacity: 0; pointer-events: none; }
+.who__opt:hover { border-color: var(--ink-3); }
+.who__opt:has(input:checked) { background: var(--ink); border-color: var(--ink); color: #fff; }
+.who__opt:has(input:focus-visible) { outline: 2px solid var(--visited); outline-offset: 2px; }
 .chip { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: .74rem; font-weight: 600; margin-right: 6px; }
 .chip--visited { background: var(--visited-pale); color: var(--visited); }
 .chip--wishlist { background: var(--wishlist-pale); color: var(--wishlist-ink); }

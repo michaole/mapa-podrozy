@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { loadSpace } from "../lib/data";
-import type { NewPlace, Place, PlaceStatus, Space, Trip } from "../lib/types";
+import { loadSpace, members as loadMembers } from "../lib/data";
+import type { ExtraCountry, Member, NewPlace, Place, PlaceStatus, Space, Trip } from "../lib/types";
 import { COUNTRY_COLORS } from "../lib/types";
 import MapView from "./MapView";
 import PlaceSearch from "./PlaceSearch";
@@ -22,7 +22,7 @@ export type Editing = { kind: "new"; draft: Omit<NewPlace, "status"> } | { kind:
 export interface SpaceData {
   places: Place[];
   trips: Trip[];
-  extraCountries: string[];
+  extraCountries: ExtraCountry[];
 }
 
 export default function Main({ space, user, onSpacesChanged }: {
@@ -36,10 +36,13 @@ export default function Main({ space, user, onSpacesChanged }: {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [focusTripId, setFocusTripId] = useState<string | null>(null);
+  const [people, setPeople] = useState<Member[]>([]);
 
   const reload = useCallback(async () => {
     try {
-      setData(await loadSpace(space.id));
+      const [d, m] = await Promise.all([loadSpace(space.id), loadMembers(space.id)]);
+      setData(d);
+      setPeople(m);
       setLoaded(true);
     } catch (e) {
       setError((e as Error).message);
@@ -71,7 +74,7 @@ export default function Main({ space, user, onSpacesChanged }: {
   }, [data.places, show, focusTripId]);
 
   const visitedCountries = useMemo(() => {
-    const set = new Set(data.extraCountries);
+    const set = new Set(data.extraCountries.map((c) => c.code));
     for (const p of data.places) if (p.status === "visited" && p.country_code) set.add(p.country_code.toUpperCase());
     return set;
   }, [data]);
@@ -118,6 +121,7 @@ export default function Main({ space, user, onSpacesChanged }: {
                 spaceId={space.id}
                 editing={editing}
                 trips={data.trips}
+                members={people}
                 existing={data.places}
                 onDone={(placeId) => { setEditing(null); if (placeId) setSelectedId(placeId); reload(); }}
                 onCancel={() => setEditing(null)}
@@ -129,15 +133,16 @@ export default function Main({ space, user, onSpacesChanged }: {
                 selectedId={selectedId} onSelect={setSelectedId} onEdit={openEditor} />
             )}
             {loaded && !editing && tab === "trips" && (
-              <TripsPanel spaceId={space.id} trips={data.trips} places={data.places}
+              <TripsPanel spaceId={space.id} trips={data.trips} places={data.places} members={people}
                 focusTripId={focusTripId} setFocusTripId={setFocusTripId}
                 onChanged={reload} onEditPlace={openEditor} />
             )}
             {loaded && !editing && tab === "countries" && (
-              <CountriesPanel spaceId={space.id} places={data.places} extra={data.extraCountries} onChanged={reload} />
+              <CountriesPanel spaceId={space.id} places={data.places} trips={data.trips} members={people}
+                extra={data.extraCountries} onChanged={reload} />
             )}
             {loaded && !editing && tab === "settings" && (
-              <SettingsPanel space={space} user={user} onSpacesChanged={onSpacesChanged} />
+              <SettingsPanel space={space} user={user} onSpacesChanged={onSpacesChanged} onPeopleChanged={reload} />
             )}
           </div>
         </aside>

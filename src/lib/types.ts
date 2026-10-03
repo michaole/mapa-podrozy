@@ -1,6 +1,14 @@
 export type PlaceStatus = "visited" | "wishlist";
 export type PlaceCategory = "restaurant" | "hotel" | "attraction" | "city" | "other";
 
+/** 'both' = together, otherwise the user id of the one person who was there */
+export type Who = "both" | (string & {});
+
+export interface ExtraCountry {
+  code: string;
+  who: Who;
+}
+
 export type CountryColor = "gold" | "terracotta" | "pine" | "sea" | "plum";
 
 export interface Space {
@@ -31,6 +39,7 @@ export interface Trip {
   start_date: string | null;
   end_date: string | null;
   notes: string | null;
+  who: Who;
 }
 
 export interface Place {
@@ -51,6 +60,7 @@ export interface Place {
   trip_id: string | null;
   visited_on: string | null;
   notes: string | null;
+  who: Who;
   created_at: string;
 }
 

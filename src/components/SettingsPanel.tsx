@@ -1,20 +1,26 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { createInvite, members, renameSpace, setCountryColor } from "../lib/data";
+import { createInvite, members, renameSpace, setCountryColor, setMyName } from "../lib/data";
 import type { CountryColor, Member, Space } from "../lib/types";
 import { COUNTRY_COLORS } from "../lib/types";
 
-export default function SettingsPanel({ space, user, onSpacesChanged }: {
-  space: Space; user: User; onSpacesChanged: () => void;
+export default function SettingsPanel({ space, user, onSpacesChanged, onPeopleChanged }: {
+  space: Space; user: User; onSpacesChanged: () => void; onPeopleChanged: () => void;
 }) {
   const [list, setList] = useState<Member[]>([]);
   const [name, setName] = useState(space.name);
   const [invite, setInvite] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [myName, setMyNameInput] = useState("");
+  const savedName = list.find((m) => m.user_id === user.id)?.profile?.display_name ?? "";
 
-  useEffect(() => { members(space.id).then(setList).catch((e) => setError(e.message)); }, [space.id]);
+  const loadMembers = () => members(space.id).then((l) => {
+    setList(l);
+    setMyNameInput(l.find((m) => m.user_id === user.id)?.profile?.display_name ?? "");
+  }).catch((e) => setError(e.message));
+  useEffect(() => { loadMembers(); }, [space.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const link = invite ? `${location.origin}${location.pathname}#/join/${invite}` : "";
 
@@ -46,6 +52,15 @@ export default function SettingsPanel({ space, user, onSpacesChanged }: {
         <label className="field field--grow"><span>Nazwa mapy</span>
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} /></label>
         <button className="btn" disabled={name.trim() === space.name}>Zmień</button>
+      </form>
+
+      <form className="row" onSubmit={async (e) => {
+        e.preventDefault();
+        try { await setMyName(user.id, myName.trim()); await loadMembers(); onPeopleChanged(); } catch (err) { setError((err as Error).message); }
+      }}>
+        <label className="field field--grow"><span>Twoje imię (widoczne w filtrach „Tylko …”)</span>
+          <input value={myName} onChange={(e) => setMyNameInput(e.target.value)} maxLength={40} placeholder="np. Michał" /></label>
+        <button className="btn" disabled={!myName.trim() || myName.trim() === savedName}>Zapisz</button>
       </form>
 
       <fieldset className="swatches">

@@ -42,6 +42,7 @@ export function placeToNew(place: google.maps.places.Place): Omit<NewPlace, "sta
     trip_id: null,
     visited_on: null,
     notes: null,
+    who: "both",
   };
 }
 

@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { addPlace, deletePlace, updatePlace } from "../lib/data";
-import type { NewPlace, Place, PlaceCategory, PlaceStatus, Trip } from "../lib/types";
+import type { Member, NewPlace, Place, PlaceCategory, PlaceStatus, Trip } from "../lib/types";
 import { CATEGORY_LABEL, STATUS_LABEL } from "../lib/types";
 import { mapsLink } from "../lib/google";
 import type { Editing } from "./Main";
 import Photos from "./Photos";
 import ConfirmButton from "./ConfirmButton";
+import WhoPicker from "./WhoPicker";
+import { whoLabel } from "../lib/people";
 import { ArrowSquareOut } from "@phosphor-icons/react";
 
-export default function PlaceEditor({ spaceId, editing, trips, existing, onDone, onCancel }: {
+export default function PlaceEditor({ spaceId, editing, trips, members, existing, onDone, onCancel }: {
   spaceId: string;
   editing: Editing;
   trips: Trip[];
+  members: Member[];
   existing: Place[];
   onDone: (placeId?: string) => void;
   onCancel: () => void;
@@ -37,6 +40,10 @@ export default function PlaceEditor({ spaceId, editing, trips, existing, onDone,
       const clean: NewPlace = {
         ...form,
         trip_id: form.status === "visited" ? form.trip_id : null,
+        // on a trip the place follows the trip's "who"
+        who: form.status === "visited" && form.trip_id
+          ? trips.find((t) => t.id === form.trip_id)?.who ?? form.who
+          : form.who,
         visited_on: form.status === "visited" ? form.visited_on || null : null,
         notes: form.notes?.trim() || null,
       };
@@ -112,6 +119,10 @@ export default function PlaceEditor({ spaceId, editing, trips, existing, onDone,
           </label>
         </div>
       )}
+
+      {form.status === "visited" && (form.trip_id
+        ? <p className="muted small">Kto był: <b>{whoLabel(trips.find((t) => t.id === form.trip_id)?.who ?? "both", members)}</b> — tak jak w podróży.</p>
+        : <WhoPicker name="place-who" value={form.who} onChange={(w) => set("who", w)} members={members} />)}
 
       <label className="field">
         <span>Notatka</span>

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { deleteTrip, saveTrip } from "../lib/data";
-import type { Place, Trip } from "../lib/types";
+import type { Member, Place, Trip } from "../lib/types";
 import { CATEGORY_LABEL } from "../lib/types";
 import { flag } from "../lib/countries";
 import Photos from "./Photos";
 import ConfirmButton from "./ConfirmButton";
+import WhoPicker from "./WhoPicker";
+import { whoLabel } from "../lib/people";
 import { MapTrifold, PencilSimple, Plus } from "@phosphor-icons/react";
 
 const fmt = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short", year: "numeric" });
@@ -14,12 +16,13 @@ const range = (t: Trip) =>
     : "bez daty";
 
 type Draft = Omit<Trip, "id" | "space_id">;
-const EMPTY: Draft = { title: "", start_date: null, end_date: null, notes: null };
+const EMPTY: Draft = { title: "", start_date: null, end_date: null, notes: null, who: "both" };
 
-export default function TripsPanel({ spaceId, trips, places, focusTripId, setFocusTripId, onChanged, onEditPlace }: {
+export default function TripsPanel({ spaceId, trips, places, members, focusTripId, setFocusTripId, onChanged, onEditPlace }: {
   spaceId: string;
   trips: Trip[];
   places: Place[];
+  members: Member[];
   focusTripId: string | null;
   setFocusTripId: (id: string | null) => void;
   onChanged: () => void;
@@ -69,6 +72,7 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
           <label className="field"><span>Do</span>
             <input type="date" value={d.end_date ?? ""} min={d.start_date ?? undefined} onChange={(e) => set("end_date", e.target.value || null)} /></label>
         </div>
+        <WhoPicker name="trip-who" legend="Kto jechał" value={d.who} onChange={(w) => set("who", w)} members={members} />
         <label className="field"><span>Notatki</span>
           <textarea rows={3} value={d.notes ?? ""} onChange={(e) => set("notes", e.target.value)} /></label>
         {error && <p className="error">{error}</p>}
@@ -99,7 +103,7 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
               <button className="trip__head" onClick={() => setOpenId(isOpen ? null : t.id)} aria-expanded={isOpen}>
                 <span className="trip__title">{t.title}</span>
                 <span className="trip__meta">
-                  {range(t)} · {inTrip.length} {inTrip.length === 1 ? "miejsce" : "miejsc"}
+                  {whoLabel(t.who, members)} · {range(t)} · {inTrip.length} {inTrip.length === 1 ? "miejsce" : "miejsc"}
                   {countries.length > 0 && <span aria-hidden="true"> {countries.map(flag).join(" ")}</span>}
                 </span>
               </button>
@@ -112,7 +116,7 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
                       <MapTrifold size={16} aria-hidden="true" />
                       {focusTripId === t.id ? "Pokaż wszystko" : "Pokaż na mapie"}
                     </button>
-                    <button className="btn btn--quiet" onClick={() => setEditing({ id: t.id, draft: { title: t.title, start_date: t.start_date, end_date: t.end_date, notes: t.notes } })}>
+                    <button className="btn btn--quiet" onClick={() => setEditing({ id: t.id, draft: { title: t.title, start_date: t.start_date, end_date: t.end_date, notes: t.notes, who: t.who } })}>
                       <PencilSimple size={16} aria-hidden="true" /> Edytuj
                     </button>
                     <ConfirmButton onConfirm={() => remove(t)} confirmLabel="Usunąć? Miejsca zostaną" />

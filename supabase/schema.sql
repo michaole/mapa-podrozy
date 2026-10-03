@@ -193,6 +193,24 @@ create table if not exists public.photos (
 create index if not exists photos_trip_idx on public.photos (trip_id);
 create index if not exists photos_place_idx on public.photos (place_id);
 
+-- who was there: 'both' (together) or the user id of the one person
+alter table public.trips  add column if not exists who text not null default 'both';
+alter table public.places add column if not exists who text not null default 'both';
+alter table public.extra_countries add column if not exists who text not null default 'both';
+
+do $$
+declare t text;
+begin
+  foreach t in array array['trips', 'places', 'extra_countries'] loop
+    execute format('alter table public.%I drop constraint if exists %I', t, t || '_who_check');
+    execute format($f$alter table public.%I add constraint %I check (who = 'both' or who ~ '^[0-9a-f-]{36}$')$f$, t, t || '_who_check');
+  end loop;
+end $$;
+
+-- a country can be on several lists (together, and solo for one of you)
+alter table public.extra_countries drop constraint if exists extra_countries_pkey;
+alter table public.extra_countries add primary key (space_id, country_code, who);
+
 -- all visited countries of a space: from visited places + marked by hand
 create or replace view public.visited_countries with (security_invoker = true) as
   select space_id, upper(country_code) as country_code
