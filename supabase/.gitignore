@@ -6,3 +6,6 @@
 .env.keys
 .env.local
 .env.*.local
+
+# secrets for config push (Google OAuth client secret)
+.env
