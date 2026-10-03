@@ -9,9 +9,10 @@ const MAP_ID = (import.meta.env.VITE_GOOGLE_MAP_ID as string | undefined) || "DE
 
 const GLYPH: Record<Place["category"], string> = { restaurant: "R", hotel: "H", attraction: "★", city: "●", other: "•" };
 
-export default function MapView({ places, visitedCountries, selected, onSelect, onEdit }: {
+export default function MapView({ places, visitedCountries, countryColor, selected, onSelect, onEdit }: {
   places: Place[];
   visitedCountries: Set<string>;
+  countryColor: string;
   selected: Place | null;
   onSelect: (id: string | null) => void;
   onEdit: (p: Place) => void;
@@ -27,7 +28,7 @@ export default function MapView({ places, visitedCountries, selected, onSelect, 
       mapTypeControl={false}
       onClick={() => onSelect(null)}
     >
-      <CountriesLayer visited={visitedCountries} />
+      <CountriesLayer visited={visitedCountries} color={countryColor} />
       <FitOnce places={places} />
       {places.map((p) => (
         <AdvancedMarker key={p.id} position={{ lat: p.lat, lng: p.lng }} title={p.name}
@@ -59,7 +60,7 @@ export default function MapView({ places, visitedCountries, selected, onSelect, 
 }
 
 /** Visited countries tinted via the map's data layer. */
-function CountriesLayer({ visited }: { visited: Set<string> }) {
+function CountriesLayer({ visited, color }: { visited: Set<string>; color: string }) {
   const map = useMap();
   const loaded = useRef(false);
 
@@ -74,15 +75,15 @@ function CountriesLayer({ visited }: { visited: Set<string> }) {
     map.data.setStyle((f) => {
       const on = visited.has(String(f.getProperty("code")));
       return {
-        fillColor: STATUS_COLOR.visited,
-        fillOpacity: on ? 0.22 : 0,
-        strokeColor: STATUS_COLOR.visited,
-        strokeOpacity: on ? 0.45 : 0,
-        strokeWeight: on ? 0.8 : 0,
+        fillColor: color,
+        fillOpacity: on ? 0.38 : 0,
+        strokeColor: color,
+        strokeOpacity: on ? 0.8 : 0,
+        strokeWeight: on ? 1 : 0,
         clickable: false,
       };
     });
-  }, [map, visited]);
+  }, [map, visited, color]);
 
   return null;
 }

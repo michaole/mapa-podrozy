@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { createInvite, members, renameSpace } from "../lib/data";
-import type { Member, Space } from "../lib/types";
+import { createInvite, members, renameSpace, setCountryColor } from "../lib/data";
+import type { CountryColor, Member, Space } from "../lib/types";
+import { COUNTRY_COLORS } from "../lib/types";
 
 export default function SettingsPanel({ space, user, onSpacesChanged }: {
   space: Space; user: User; onSpacesChanged: () => void;
@@ -46,6 +47,22 @@ export default function SettingsPanel({ space, user, onSpacesChanged }: {
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} /></label>
         <button className="btn" disabled={name.trim() === space.name}>Zmień</button>
       </form>
+
+      <fieldset className="swatches">
+        <legend className="group-title">Kolor odwiedzonych krajów</legend>
+        <div className="swatches__row">
+          {(Object.keys(COUNTRY_COLORS) as CountryColor[]).map((c) => (
+            <label key={c} className="swatch" style={{ "--swatch": COUNTRY_COLORS[c].hex } as React.CSSProperties}>
+              <input type="radio" name="country-color" checked={space.country_color === c}
+                onChange={async () => {
+                  try { await setCountryColor(space.id, c); onSpacesChanged(); } catch (e) { setError((e as Error).message); }
+                }} />
+              <span className="swatch__chip" aria-hidden="true" />
+              <span className="swatch__label">{COUNTRY_COLORS[c].label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <section className="stack">
         <h3 className="group-title">Kto ma dostęp</h3>

@@ -8,15 +8,19 @@ function check<T>(res: { data: T | null; error: { message: string } | null }): T
 
 // ── spaces & members ─────────────────────────────────────────────────────────
 export async function mySpaces(): Promise<Space[]> {
-  return check(await supabase.from("spaces").select("id, name").order("created_at"));
+  return check(await supabase.from("spaces").select("id, name, country_color").order("created_at"));
 }
 
 export async function createSpace(name: string): Promise<Space> {
-  return check(await supabase.from("spaces").insert({ name }).select("id, name").single());
+  return check(await supabase.from("spaces").insert({ name }).select("id, name, country_color").single());
 }
 
 export async function renameSpace(id: string, name: string): Promise<void> {
   check(await supabase.from("spaces").update({ name }).eq("id", id));
+}
+
+export async function setCountryColor(id: string, country_color: Space["country_color"]): Promise<void> {
+  check(await supabase.from("spaces").update({ country_color }).eq("id", id));
 }
 
 export async function members(spaceId: string): Promise<Member[]> {

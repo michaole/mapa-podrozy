@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { loadSpace } from "../lib/data";
 import type { NewPlace, Place, PlaceStatus, Space, Trip } from "../lib/types";
+import { COUNTRY_COLORS } from "../lib/types";
 import MapView from "./MapView";
 import PlaceSearch from "./PlaceSearch";
 import PlaceList from "./PlaceList";
@@ -57,9 +58,12 @@ export default function Main({ space, user, onSpacesChanged }: {
         timer.current = window.setTimeout(reload, 300);
       });
     }
+    // map settings (e.g. country colour) changed by the other person
+    channel.on("postgres_changes", { event: "UPDATE", schema: "public", table: "spaces", filter: `id=eq.${space.id}` },
+      () => onSpacesChanged());
     channel.subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [space.id, reload]);
+  }, [space.id, reload, onSpacesChanged]);
 
   const visibleOnMap = useMemo(() => {
     const trip = focusTripId;
@@ -142,6 +146,7 @@ export default function Main({ space, user, onSpacesChanged }: {
           <MapView
             places={visibleOnMap}
             visitedCountries={visitedCountries}
+            countryColor={(COUNTRY_COLORS[space.country_color] ?? COUNTRY_COLORS.gold).hex}
             selected={selected}
             onSelect={setSelectedId}
             onEdit={openEditor}

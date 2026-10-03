@@ -38,6 +38,11 @@ create table if not exists public.spaces (
   created_by uuid not null default auth.uid() references auth.users on delete cascade,
   created_at timestamptz not null default now()
 );
+-- colour of visited countries on the map, shared by everyone on the map
+alter table public.spaces add column if not exists country_color text not null default 'gold';
+alter table public.spaces drop constraint if exists spaces_country_color_check;
+alter table public.spaces add constraint spaces_country_color_check
+  check (country_color in ('gold', 'terracotta', 'pine', 'sea', 'plum'));
 
 create table if not exists public.space_members (
   space_id  uuid not null references public.spaces on delete cascade,
@@ -298,7 +303,7 @@ create policy photos_member_delete on storage.objects for delete to authenticate
 do $$
 declare t text;
 begin
-  foreach t in array array['places', 'trips', 'extra_countries', 'photos'] loop
+  foreach t in array array['places', 'trips', 'extra_countries', 'photos', 'spaces'] loop
     begin
       execute format('alter publication supabase_realtime add table public.%I', t);
     exception when duplicate_object then null;

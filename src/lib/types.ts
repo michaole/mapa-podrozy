@@ -1,10 +1,22 @@
 export type PlaceStatus = "visited" | "wishlist";
 export type PlaceCategory = "restaurant" | "hotel" | "attraction" | "city" | "other";
 
+export type CountryColor = "gold" | "terracotta" | "pine" | "sea" | "plum";
+
 export interface Space {
   id: string;
   name: string;
+  country_color: CountryColor;
 }
+
+/** Fill colours for visited countries (chosen per shared map in Ustawienia). */
+export const COUNTRY_COLORS: Record<CountryColor, { label: string; hex: string }> = {
+  gold: { label: "Złoty", hex: "#c9962b" },
+  terracotta: { label: "Terakota", hex: "#b85c38" },
+  pine: { label: "Sosna", hex: "#1f6b5c" },
+  sea: { label: "Morski", hex: "#2f6f93" },
+  plum: { label: "Śliwka", hex: "#7d4b7a" },
+};
 
 export interface Member {
   user_id: string;
