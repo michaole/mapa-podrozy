@@ -29,7 +29,7 @@ export async function members(spaceId: string): Promise<Member[]> {
   );
   const ids = rows.map((r) => r.user_id);
   const profiles = ids.length
-    ? check(await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids))
+    ? check(await supabase.from("profiles").select("id, display_name, avatar_url, color").in("id", ids))
     : [];
   return rows.map((r) => ({
     user_id: r.user_id,
@@ -90,6 +90,10 @@ export async function setExtraCountry(spaceId: string, code: string, who: Who, o
   if (on) check(await supabase.from("extra_countries").upsert({ space_id: spaceId, country_code: code, who }));
   else check(await supabase.from("extra_countries").delete()
     .eq("space_id", spaceId).eq("country_code", code).eq("who", who));
+}
+
+export async function setMyColor(userId: string, color: Space["country_color"]): Promise<void> {
+  check(await supabase.from("profiles").update({ color }).eq("id", userId));
 }
 
 export async function setMyName(userId: string, display_name: string): Promise<void> {

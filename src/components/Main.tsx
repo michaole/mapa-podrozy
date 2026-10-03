@@ -4,7 +4,6 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { loadSpace, members as loadMembers } from "../lib/data";
 import type { ExtraCountry, Member, NewPlace, Place, PlaceStatus, Space, Trip } from "../lib/types";
-import { COUNTRY_COLORS } from "../lib/types";
 import MapView from "./MapView";
 import PlaceSearch from "./PlaceSearch";
 import PlaceList from "./PlaceList";
@@ -13,6 +12,7 @@ import TripsPanel from "./TripsPanel";
 import CountriesPanel from "./CountriesPanel";
 import SettingsPanel from "./SettingsPanel";
 import { plural } from "../lib/format";
+import { colorHex, countryOwners, memberColor, memberName } from "../lib/people";
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 
@@ -78,6 +78,23 @@ export default function Main({ space, user, onSpacesChanged }: {
     for (const p of data.places) if (p.status === "visited" && p.country_code) set.add(p.country_code.toUpperCase());
     return set;
   }, [data]);
+
+  // map tint per country: shared colour for together, each person's colour for solo
+  const { countryFills, legend } = useMemo(() => {
+    const together = colorHex(space.country_color);
+    const owners = countryOwners(data.places, data.trips, data.extraCountries);
+    const fills = new Map<string, string>();
+    const used = new Set<string>();
+    for (const [code, who] of owners) {
+      const m = who === "both" ? undefined : people.find((x) => x.user_id === who);
+      fills.set(code, m ? colorHex(memberColor(m)) : together);
+      used.add(m ? m.user_id : "both");
+    }
+    const entries = [{ label: "Razem", hex: together }, ...people
+      .filter((m) => used.has(m.user_id))
+      .map((m) => ({ label: `Tylko ${memberName(m)}`, hex: colorHex(memberColor(m)) }))];
+    return { countryFills: fills, legend: entries.length > 1 ? entries : [] };
+  }, [data, people, space.country_color]);
 
   const selected = data.places.find((p) => p.id === selectedId) ?? null;
 
@@ -150,12 +167,18 @@ export default function Main({ space, user, onSpacesChanged }: {
         <main className="map">
           <MapView
             places={visibleOnMap}
-            visitedCountries={visitedCountries}
-            countryColor={(COUNTRY_COLORS[space.country_color] ?? COUNTRY_COLORS.gold).hex}
+            countryFills={countryFills}
             selected={selected}
             onSelect={setSelectedId}
             onEdit={openEditor}
           />
+          {legend.length > 0 && (
+            <ul className="map__legend" aria-label="Legenda krajów">
+              {legend.map((l) => (
+                <li key={l.label}><span className="map__swatch" style={{ background: l.hex }} />{l.label}</li>
+              ))}
+            </ul>
+          )}
           {focusTripId && (
             <div className="map__banner">
               Pokazuję jedną podróż · <button className="link" onClick={() => setFocusTripId(null)}>pokaż wszystko</button>

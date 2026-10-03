@@ -29,7 +29,7 @@ export const COUNTRY_COLORS: Record<CountryColor, { label: string; hex: string }
 export interface Member {
   user_id: string;
   role: "owner" | "member";
-  profile: { display_name: string | null; avatar_url: string | null } | null;
+  profile: { display_name: string | null; avatar_url: string | null; color: CountryColor | null } | null;
 }
 
 export interface Trip {

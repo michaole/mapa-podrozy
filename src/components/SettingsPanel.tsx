@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { createInvite, members, renameSpace, setCountryColor, setMyName } from "../lib/data";
+import { createInvite, members, renameSpace, setCountryColor, setMyColor, setMyName } from "../lib/data";
+import { memberColor } from "../lib/people";
 import type { CountryColor, Member, Space } from "../lib/types";
 import { COUNTRY_COLORS } from "../lib/types";
 
@@ -64,7 +65,7 @@ export default function SettingsPanel({ space, user, onSpacesChanged, onPeopleCh
       </form>
 
       <fieldset className="swatches">
-        <legend className="group-title">Kolor odwiedzonych krajów</legend>
+        <legend className="group-title">Kolor krajów odwiedzonych razem</legend>
         <div className="swatches__row">
           {(Object.keys(COUNTRY_COLORS) as CountryColor[]).map((c) => (
             <label key={c} className="swatch" style={{ "--swatch": COUNTRY_COLORS[c].hex } as React.CSSProperties}>
@@ -78,6 +79,28 @@ export default function SettingsPanel({ space, user, onSpacesChanged, onPeopleCh
           ))}
         </div>
       </fieldset>
+
+      {(() => {
+        const mine = list.find((m) => m.user_id === user.id);
+        if (!mine) return null;
+        return (
+          <fieldset className="swatches">
+            <legend className="group-title">Twój kolor (kraje, w których byłeś/aś sam/a)</legend>
+            <div className="swatches__row">
+              {(Object.keys(COUNTRY_COLORS) as CountryColor[]).map((c) => (
+                <label key={c} className="swatch" style={{ "--swatch": COUNTRY_COLORS[c].hex } as React.CSSProperties}>
+                  <input type="radio" name="my-color" checked={memberColor(mine) === c}
+                    onChange={async () => {
+                      try { await setMyColor(user.id, c); await loadMembers(); onPeopleChanged(); } catch (e) { setError((e as Error).message); }
+                    }} />
+                  <span className="swatch__chip" aria-hidden="true" />
+                  <span className="swatch__label">{COUNTRY_COLORS[c].label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        );
+      })()}
 
       <section className="stack">
         <h3 className="group-title">Kto ma dostęp</h3>

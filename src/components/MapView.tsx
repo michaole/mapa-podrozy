@@ -9,10 +9,9 @@ const MAP_ID = (import.meta.env.VITE_GOOGLE_MAP_ID as string | undefined) || "DE
 
 const GLYPH: Record<Place["category"], string> = { restaurant: "R", hotel: "H", attraction: "★", city: "●", other: "•" };
 
-export default function MapView({ places, visitedCountries, countryColor, selected, onSelect, onEdit }: {
+export default function MapView({ places, countryFills, selected, onSelect, onEdit }: {
   places: Place[];
-  visitedCountries: Set<string>;
-  countryColor: string;
+  countryFills: Map<string, string>;
   selected: Place | null;
   onSelect: (id: string | null) => void;
   onEdit: (p: Place) => void;
@@ -28,7 +27,7 @@ export default function MapView({ places, visitedCountries, countryColor, select
       mapTypeControl={false}
       onClick={() => onSelect(null)}
     >
-      <CountriesLayer visited={visitedCountries} color={countryColor} />
+      <CountriesLayer fills={countryFills} />
       <FitOnce places={places} />
       {places.map((p) => (
         <AdvancedMarker key={p.id} position={{ lat: p.lat, lng: p.lng }} title={p.name}
@@ -60,7 +59,7 @@ export default function MapView({ places, visitedCountries, countryColor, select
 }
 
 /** Visited countries tinted via the map's data layer. */
-function CountriesLayer({ visited, color }: { visited: Set<string>; color: string }) {
+function CountriesLayer({ fills }: { fills: Map<string, string> }) {
   const map = useMap();
   const loaded = useRef(false);
 
@@ -73,17 +72,17 @@ function CountriesLayer({ visited, color }: { visited: Set<string>; color: strin
   useEffect(() => {
     if (!map) return;
     map.data.setStyle((f) => {
-      const on = visited.has(String(f.getProperty("code")));
+      const color = fills.get(String(f.getProperty("code")));
       return {
-        fillColor: color,
-        fillOpacity: on ? 0.38 : 0,
-        strokeColor: color,
-        strokeOpacity: on ? 0.8 : 0,
-        strokeWeight: on ? 1 : 0,
+        fillColor: color ?? "#000",
+        fillOpacity: color ? 0.38 : 0,
+        strokeColor: color ?? "#000",
+        strokeOpacity: color ? 0.8 : 0,
+        strokeWeight: color ? 1 : 0,
         clickable: false,
       };
     });
-  }, [map, visited, color]);
+  }, [map, fills]);
 
   return null;
 }

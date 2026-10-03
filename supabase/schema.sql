@@ -13,6 +13,12 @@ create table if not exists public.profiles (
   created_at  timestamptz not null default now()
 );
 
+-- each person's colour for countries they visited alone (null = default by role)
+alter table public.profiles add column if not exists color text;
+alter table public.profiles drop constraint if exists profiles_color_check;
+alter table public.profiles add constraint profiles_color_check
+  check (color is null or color in ('gold', 'terracotta', 'pine', 'sea', 'plum'));
+
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
