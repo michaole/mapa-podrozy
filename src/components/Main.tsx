@@ -82,11 +82,11 @@ export default function Main({ space, user, onSpacesChanged }: {
         <aside className="panel">
           <header className="panel__head">
             <h1 className="brand">{space.name}</h1>
-            <p className="muted small">
-              {visitedCountries.size} {plural(visitedCountries.size, "kraj", "kraje", "krajów")} ·{" "}
-              {data.places.filter((p) => p.status === "visited").length} odwiedzonych ·{" "}
-              {data.places.filter((p) => p.status === "wishlist").length} na liście
-            </p>
+            <dl className="stats">
+              <div><dt>{plural(visitedCountries.size, "kraj", "kraje", "krajów")}</dt><dd>{visitedCountries.size}</dd></div>
+              <div><dt>odwiedzonych</dt><dd>{data.places.filter((p) => p.status === "visited").length}</dd></div>
+              <div className="stats--wish"><dt>do odwiedzenia</dt><dd>{data.places.filter((p) => p.status === "wishlist").length}</dd></div>
+            </dl>
           </header>
 
           <PlaceSearch onPick={(draft) => { setEditing({ kind: "new", draft }); setTab("places"); }} />
@@ -102,7 +102,11 @@ export default function Main({ space, user, onSpacesChanged }: {
 
           <div className="panel__body">
             {error && <p className="error">{error}</p>}
-            {!loaded && !error && <p className="muted">Ładowanie…</p>}
+            {!loaded && !error && (
+              <div className="skeleton" aria-busy="true" aria-label="Ładowanie">
+                {Array.from({ length: 6 }, (_, i) => <div key={i} className="skeleton__row" />)}
+              </div>
+            )}
 
             {loaded && editing && (
               <PlaceEditor

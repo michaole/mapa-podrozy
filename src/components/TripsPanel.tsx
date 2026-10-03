@@ -4,6 +4,8 @@ import type { Place, Trip } from "../lib/types";
 import { CATEGORY_LABEL } from "../lib/types";
 import { flag } from "../lib/countries";
 import Photos from "./Photos";
+import ConfirmButton from "./ConfirmButton";
+import { MapTrifold, PencilSimple, Plus } from "@phosphor-icons/react";
 
 const fmt = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short", year: "numeric" });
 const range = (t: Trip) =>
@@ -41,7 +43,6 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
   }
 
   async function remove(t: Trip) {
-    if (!confirm(`Usunąć podróż „${t.title}”? Miejsca zostaną, tylko bez przypisania.`)) return;
     try {
       await deleteTrip(t.id);
       if (focusTripId === t.id) setFocusTripId(null);
@@ -73,7 +74,7 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
         {error && <p className="error">{error}</p>}
         <div className="actions">
           <button className="btn btn--primary">Zapisz</button>
-          <button type="button" className="btn" onClick={() => setEditing(null)}>Anuluj</button>
+          <button type="button" className="btn btn--quiet" onClick={() => setEditing(null)}>Anuluj</button>
         </div>
       </form>
     );
@@ -81,7 +82,9 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
 
   return (
     <div className="stack">
-      <button className="btn btn--primary" onClick={() => setEditing({ draft: EMPTY })}>+ Nowa podróż</button>
+      <button className="btn btn--primary" onClick={() => setEditing({ draft: EMPTY })}>
+        <Plus size={16} weight="bold" aria-hidden="true" /> Nowa podróż
+      </button>
       {error && <p className="error">{error}</p>}
       {trips.length === 0 && (
         <p className="muted">Podróż grupuje miejsca i zdjęcia z jednego wyjazdu. Po jej założeniu przypisz do niej odwiedzone miejsca w ich edycji.</p>
@@ -104,11 +107,15 @@ export default function TripsPanel({ spaceId, trips, places, focusTripId, setFoc
                 <div className="trip__body stack">
                   {t.notes && <p className="note">{t.notes}</p>}
                   <div className="actions">
-                    <button className="btn" onClick={() => setFocusTripId(focusTripId === t.id ? null : t.id)}>
-                      {focusTripId === t.id ? "Pokaż wszystko na mapie" : "Pokaż na mapie"}
+                    <button className="btn btn--quiet" aria-pressed={focusTripId === t.id}
+                      onClick={() => setFocusTripId(focusTripId === t.id ? null : t.id)}>
+                      <MapTrifold size={16} aria-hidden="true" />
+                      {focusTripId === t.id ? "Pokaż wszystko" : "Pokaż na mapie"}
                     </button>
-                    <button className="btn" onClick={() => setEditing({ id: t.id, draft: { title: t.title, start_date: t.start_date, end_date: t.end_date, notes: t.notes } })}>Edytuj</button>
-                    <button className="btn btn--danger" onClick={() => remove(t)}>Usuń</button>
+                    <button className="btn btn--quiet" onClick={() => setEditing({ id: t.id, draft: { title: t.title, start_date: t.start_date, end_date: t.end_date, notes: t.notes } })}>
+                      <PencilSimple size={16} aria-hidden="true" /> Edytuj
+                    </button>
+                    <ConfirmButton onConfirm={() => remove(t)} confirmLabel="Usunąć? Miejsca zostaną" />
                   </div>
                   {inTrip.length > 0 && (
                     <ul className="place-list place-list--compact">

@@ -5,6 +5,8 @@ import { CATEGORY_LABEL, STATUS_LABEL } from "../lib/types";
 import { mapsLink } from "../lib/google";
 import type { Editing } from "./Main";
 import Photos from "./Photos";
+import ConfirmButton from "./ConfirmButton";
+import { ArrowSquareOut } from "@phosphor-icons/react";
 
 export default function PlaceEditor({ spaceId, editing, trips, existing, onDone, onCancel }: {
   spaceId: string;
@@ -52,7 +54,7 @@ export default function PlaceEditor({ spaceId, editing, trips, existing, onDone,
   }
 
   async function remove() {
-    if (editing.kind !== "existing" || !confirm(`Usunąć „${editing.place.name}”?`)) return;
+    if (editing.kind !== "existing") return;
     setBusy(true);
     try {
       await deletePlace(editing.place.id);
@@ -69,7 +71,9 @@ export default function PlaceEditor({ spaceId, editing, trips, existing, onDone,
         <h2 className="editor__title">{form.name}</h2>
         {form.address && <p className="muted small">{form.address}</p>}
         <p className="small">
-          <a href={mapsLink(form)} target="_blank" rel="noopener">Otwórz w Google Maps</a>
+          <a href={mapsLink(form)} target="_blank" rel="noopener" className="ext-link">
+            Otwórz w Google Maps <ArrowSquareOut size={14} aria-hidden="true" />
+          </a>
           {form.rating ? <span className="muted"> · ★ {form.rating} w Google</span> : null}
         </p>
       </div>
@@ -128,10 +132,8 @@ export default function PlaceEditor({ spaceId, editing, trips, existing, onDone,
         <button className="btn btn--primary" disabled={busy || !!duplicate}>
           {editing.kind === "existing" ? "Zapisz" : `Zapisz jako „${STATUS_LABEL[form.status]}”`}
         </button>
-        <button type="button" className="btn" onClick={onCancel} disabled={busy}>Anuluj</button>
-        {editing.kind === "existing" && (
-          <button type="button" className="btn btn--danger" onClick={remove} disabled={busy}>Usuń</button>
-        )}
+        <button type="button" className="btn btn--quiet" onClick={onCancel} disabled={busy}>Anuluj</button>
+        {editing.kind === "existing" && <ConfirmButton onConfirm={remove} disabled={busy} />}
       </div>
     </form>
   );

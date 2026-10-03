@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { deletePhoto, listPhotos, uploadPhoto } from "../lib/data";
 import type { Photo } from "../lib/types";
+import ConfirmButton from "./ConfirmButton";
+import { ImageSquare } from "@phosphor-icons/react";
 
 type Target = { tripId?: string; placeId?: string };
 
@@ -36,7 +38,6 @@ export default function Photos({ spaceId, target }: { spaceId: string; target: T
   }
 
   async function remove(p: Photo) {
-    if (!confirm("Usunąć zdjęcie?")) return;
     try {
       await deletePhoto(p);
       setOpen(null);
@@ -58,7 +59,8 @@ export default function Photos({ spaceId, target }: { spaceId: string; target: T
         ))}
         <label className={`photos__add${busy ? " is-busy" : ""}`}>
           <input type="file" accept="image/*" multiple onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} disabled={busy} />
-          {busy ? "Wysyłam…" : "+ Dodaj"}
+          <ImageSquare size={20} aria-hidden="true" />
+          {busy ? "Wysyłam…" : "Dodaj"}
         </label>
       </div>
       {error && <p className="error small">{error}</p>}
@@ -67,7 +69,7 @@ export default function Photos({ spaceId, target }: { spaceId: string; target: T
           <img src={opened.url} alt="" />
           <div className="lightbox__bar" onClick={(e) => e.stopPropagation()}>
             <button className="btn" onClick={() => setOpen(null)}>Zamknij</button>
-            <button className="btn btn--danger" onClick={() => remove(opened)}>Usuń</button>
+            <ConfirmButton onConfirm={() => remove(opened)} confirmLabel="Na pewno usunąć zdjęcie?" />
           </div>
         </div>
       )}

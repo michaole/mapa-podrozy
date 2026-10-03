@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Place, PlaceCategory, PlaceStatus } from "../lib/types";
 import { CATEGORY_LABEL, STATUS_LABEL } from "../lib/types";
 import { flag } from "../lib/countries";
+import { PencilSimple } from "@phosphor-icons/react";
 
 export default function PlaceList({ places, show, setShow, selectedId, onSelect, onEdit }: {
   places: Place[];
@@ -36,10 +37,11 @@ export default function PlaceList({ places, show, setShow, selectedId, onSelect,
     <div className="stack">
       <div className="filters">
         {(["visited", "wishlist"] as PlaceStatus[]).map((s) => (
-          <label key={s} className={`toggle toggle--${s}`}>
-            <input type="checkbox" checked={show[s]} onChange={(e) => setShow({ ...show, [s]: e.target.checked })} />
-            {STATUS_LABEL[s]} <span className="muted">{places.filter((p) => p.status === s).length}</span>
-          </label>
+          <button key={s} type="button" className={`chip-toggle chip-toggle--${s}`} aria-pressed={show[s]}
+            onClick={() => setShow({ ...show, [s]: !show[s] })}>
+            <span className={`dot dot--${s}`} aria-hidden="true" />
+            {STATUS_LABEL[s]} <span className="chip-toggle__count">{places.filter((p) => p.status === s).length}</span>
+          </button>
         ))}
         <select value={category} onChange={(e) => setCategory(e.target.value as PlaceCategory | "")} aria-label="Kategoria">
           <option value="">Wszystkie kategorie</option>
@@ -50,8 +52,8 @@ export default function PlaceList({ places, show, setShow, selectedId, onSelect,
 
       {places.length === 0 && (
         <div className="empty">
-          <p><b>Pusta mapa.</b></p>
-          <p className="muted">Wpisz w wyszukiwarkę nazwę restauracji, hotelu albo miasta i zapisz je jako „Byliśmy” albo „Chcemy”.</p>
+          <p className="empty__title">Tu zaczyna się wasza mapa</p>
+          <p className="muted">Wpisz w wyszukiwarkę nazwę restauracji, hotelu albo miasta i zapisz je jako „Byliśmy” albo „Chcemy”. Odwiedzone kraje zaznaczą się na mapie same.</p>
         </div>
       )}
       {places.length > 0 && shown.length === 0 && <p className="muted">Nic nie pasuje do filtrów.</p>}
@@ -74,7 +76,9 @@ export default function PlaceList({ places, show, setShow, selectedId, onSelect,
                     </span>
                   </span>
                 </button>
-                <button className="link small" onClick={() => onEdit(p)}>Edytuj</button>
+                <button className="icon-btn" onClick={() => onEdit(p)} aria-label={`Edytuj: ${p.name}`} title="Edytuj">
+                  <PencilSimple size={16} aria-hidden="true" />
+                </button>
               </li>
             ))}
           </ul>
