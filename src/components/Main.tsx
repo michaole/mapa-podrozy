@@ -113,7 +113,10 @@ export default function Main({ space, spaces, onSwitchSpace, user, onSpacesChang
             </dl>
           </header>
 
-          <PlaceSearch onPick={(draft) => { setEditing({ kind: "new", draft }); setTab("places"); }} />
+          {/* adding places belongs to Miejsca; elsewhere it confused the forms below it */}
+          {tab === "places" && !editing && (
+            <PlaceSearch onPick={(draft) => setEditing({ kind: "new", draft })} />
+          )}
 
           <nav className="tabs" role="tablist">
             {([["places", "Miejsca"], ["trips", "Podróże"], ["countries", "Kraje"], ["settings", "Ustawienia"]] as [Tab, string][])

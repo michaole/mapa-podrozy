@@ -322,6 +322,8 @@ textarea { resize: vertical; }
   .search__list { left: 18px; right: 18px; }
   .panel__body { padding: 14px 18px 28px; }
   .tabs { overflow-x: auto; scrollbar-width: none; }
+  .map__legend { left: 8px; bottom: 30px; padding: 5px 8px; gap: 2px; font-size: .68rem; }
+  .map__swatch { width: 9px; height: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
