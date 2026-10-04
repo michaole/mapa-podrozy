@@ -7,21 +7,32 @@ import Login from "./components/Login";
 import SpaceSetup from "./components/SpaceSetup";
 import Main from "./components/Main";
 
-const INVITE_KEY = "mapa.pendingInvite";
+import { ACTIVE_SPACE_KEY, INVITE_KEY, storage } from "./lib/invite";
 
-/** '#/join/ABC123' → keep the code across the Google sign-in redirect */
+/**
+ * Keep an invite code until the person has signed in. It arrives as
+ * '#/join/CODE' (the shared link) or '?invite=CODE' (carried through the
+ * sign-in redirect, so it survives the email link opening another tab).
+ */
 function captureInviteFromUrl() {
-  const m = location.hash.match(/^#\/join\/([A-Za-z0-9]+)/);
-  if (m) {
-    sessionStorage.setItem(INVITE_KEY, m[1]);
-    history.replaceState(null, "", location.pathname + location.search);
-  }
+  const fromHash = location.hash.match(/^#\/join\/([A-Za-z0-9]+)/)?.[1];
+  const params = new URLSearchParams(location.search);
+  const fromQuery = params.get("invite");
+  const code = fromHash ?? fromQuery;
+  if (!code) return;
+  storage.set(INVITE_KEY, code);
+  params.delete("invite");
+  const query = params.toString();
+  // keep any auth tokens in the hash; drop only our own markers
+  const hash = fromHash ? "" : location.hash;
+  history.replaceState(null, "", location.pathname + (query ? `?${query}` : "") + hash);
 }
 captureInviteFromUrl();
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [spaces, setSpaces] = useState<Space[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(() => storage.get(ACTIVE_SPACE_KEY));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,11 +43,13 @@ export default function App() {
 
   const refreshSpaces = useCallback(async () => {
     try {
-      const pending = sessionStorage.getItem(INVITE_KEY);
+      const pending = storage.get(INVITE_KEY);
       if (pending) {
-        sessionStorage.removeItem(INVITE_KEY);
+        storage.remove(INVITE_KEY);
         try {
-          await acceptInvite(pending);
+          const joined = await acceptInvite(pending);
+          storage.set(ACTIVE_SPACE_KEY, joined);
+          setActiveId(joined);
         } catch (e) {
           setError(`Nie udało się dołączyć z zaproszenia: ${(e as Error).message}`);
         }
@@ -73,7 +86,13 @@ export default function App() {
       )}
       {spaces.length === 0
         ? <SpaceSetup onReady={refreshSpaces} />
-        : <Main space={spaces[0]} user={session.user} onSpacesChanged={refreshSpaces} />}
+        : <Main
+            key={(spaces.find((s) => s.id === activeId) ?? spaces[0]).id}
+            space={spaces.find((s) => s.id === activeId) ?? spaces[0]}
+            spaces={spaces}
+            onSwitchSpace={(id) => { storage.set(ACTIVE_SPACE_KEY, id); setActiveId(id); }}
+            user={session.user}
+            onSpacesChanged={refreshSpaces} />}
     </>
   );
 }

@@ -25,8 +25,8 @@ export interface SpaceData {
   extraCountries: ExtraCountry[];
 }
 
-export default function Main({ space, user, onSpacesChanged }: {
-  space: Space; user: User; onSpacesChanged: () => void;
+export default function Main({ space, spaces, onSwitchSpace, user, onSpacesChanged }: {
+  space: Space; spaces: Space[]; onSwitchSpace: (id: string) => void; user: User; onSpacesChanged: () => void;
 }) {
   const [data, setData] = useState<SpaceData>({ places: [], trips: [], extraCountries: [] });
   const [loaded, setLoaded] = useState(false);
@@ -159,7 +159,8 @@ export default function Main({ space, user, onSpacesChanged }: {
                 extra={data.extraCountries} onChanged={reload} />
             )}
             {loaded && !editing && tab === "settings" && (
-              <SettingsPanel space={space} user={user} onSpacesChanged={onSpacesChanged} onPeopleChanged={reload} />
+              <SettingsPanel space={space} spaces={spaces} onSwitchSpace={onSwitchSpace}
+                user={user} onSpacesChanged={onSpacesChanged} onPeopleChanged={reload} />
             )}
           </div>
         </aside>

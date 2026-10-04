@@ -24,7 +24,10 @@ export default function SpaceSetup({ onReady }: { onReady: () => void }) {
   return (
     <div className="center-card">
       <h1 className="brand">Witaj!</h1>
-      <p className="muted">Załóż wspólną mapę i zaproś partnera(-kę) — albo dołącz kodem z zaproszenia.</p>
+      <p className="muted">
+        <b>Jeśli druga osoba już założyła mapę, nie zakładaj nowej</b> — otwórz link z zaproszenia albo wpisz kod poniżej.
+        Inaczej będziecie mieć dwie osobne mapy.
+      </p>
 
       <form className="stack" onSubmit={(e) => { e.preventDefault(); run(() => createSpace(name.trim() || "Nasza mapa")); }}>
         <label className="field">

@@ -6,8 +6,9 @@ import { memberColor } from "../lib/people";
 import type { CountryColor, Member, Space } from "../lib/types";
 import { COUNTRY_COLORS } from "../lib/types";
 
-export default function SettingsPanel({ space, user, onSpacesChanged, onPeopleChanged }: {
-  space: Space; user: User; onSpacesChanged: () => void; onPeopleChanged: () => void;
+export default function SettingsPanel({ space, spaces, onSwitchSpace, user, onSpacesChanged, onPeopleChanged }: {
+  space: Space; spaces: Space[]; onSwitchSpace: (id: string) => void;
+  user: User; onSpacesChanged: () => void; onPeopleChanged: () => void;
 }) {
   const [list, setList] = useState<Member[]>([]);
   const [name, setName] = useState(space.name);
@@ -46,6 +47,14 @@ export default function SettingsPanel({ space, user, onSpacesChanged, onPeopleCh
 
   return (
     <div className="stack">
+      {spaces.length > 1 && (
+        <label className="field">
+          <span>Należysz do kilku map — otwarta:</span>
+          <select value={space.id} onChange={(e) => onSwitchSpace(e.target.value)}>
+            {spaces.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </label>
+      )}
       <form className="row" onSubmit={async (e) => {
         e.preventDefault();
         try { await renameSpace(space.id, name.trim() || space.name); onSpacesChanged(); } catch (err) { setError((err as Error).message); }
